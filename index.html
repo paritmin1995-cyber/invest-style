@@ -1,0 +1,1331 @@
+<!doctype html>
+<html lang="th">
+ <head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Invest Style Finder</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+  <script src="/_sdk/element_sdk.js"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500;600&amp;display=swap" rel="stylesheet">
+  <style>
+        body {
+            box-sizing: border-box;
+            font-family: 'Prompt', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+        .calendar-day {
+            aspect-ratio: 1;
+            transition: all 0.2s ease;
+        }
+        .calendar-day:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        .good-deed-day {
+            background-color: #dcfce7;
+            border: 2px solid #22c55e;
+        }
+        .today {
+            border: 2px solid #ef4444;
+        }
+        .btn {
+            transition: all 0.2s ease;
+        }
+        .btn:active {
+            transform: scale(0.98);
+        }
+    </style>
+  <style>@view-transition { navigation: auto; }</style>
+  <script src="/_sdk/data_sdk.js" type="text/javascript"></script>
+ </head>
+ <body class="min-h-full py-6">
+  <div class="container mx-auto px-4 max-w-lg">
+   <div class="bg-white rounded-xl shadow-lg p-6 mb-6">
+    <h1 class="text-2xl font-bold text-center text-purple-700 mb-2">Invest Style Finder</h1>
+    <p class="text-center text-gray-600 mb-6 text-sm">ทำแบบทดสอบเพื่อหาประเภทนักลงทุนที่เหมาะกับคุณ</p><!-- Add New Test Button -->
+    <div class="mb-6"><button id="add-test" class="btn w-full bg-purple-600 hover:bg-purple-700 text-white font-medium py-3 px-6 rounded-lg"> + เริ่มทำแบบทดสอบ </button>
+    </div><!-- Summary -->
+    <div class="grid grid-cols-2 gap-4 mb-6">
+     <div class="bg-green-50 p-4 rounded-lg text-center">
+      <div class="text-sm text-gray-600 mb-1">
+       จำนวนครั้งที่ทำ
+      </div>
+      <div id="total-tests" class="text-2xl font-bold text-green-600">
+       0 ครั้ง
+      </div>
+     </div>
+     <div class="bg-purple-50 p-4 rounded-lg text-center">
+      <div class="text-sm text-gray-600 mb-1">
+       ผลล่าสุด
+      </div>
+      <div id="latest-result" class="text-lg font-bold text-purple-600">
+       -
+      </div>
+     </div>
+    </div><!-- Test History -->
+    <div class="mb-6">
+     <h3 class="text-lg font-medium text-gray-800 mb-3">ประวัติการทำแบบทดสอบ</h3>
+     <div id="test-history" class="space-y-2">
+      <div class="text-center text-gray-500 py-4">
+       ยังไม่มีการทำแบบทดสอบ
+      </div>
+     </div>
+    </div><!-- Instructions -->
+    <div class="bg-yellow-50 p-4 rounded-lg text-sm">
+     <p class="font-medium text-yellow-800 mb-2">คำแนะนำ:</p>
+     <ul class="list-disc pl-5 text-gray-700 space-y-1">
+      <li>ทำแบบทดสอบเพื่อหาประเภทนักลงทุนที่เหมาะกับคุณ</li>
+      <li>สามารถทำแบบทดสอบได้หลายครั้งเพื่อเปรียบเทียบผล</li>
+      <li>ผลการทดสอบจะถูกบันทึกพร้อมวันที่และเวลา</li>
+     </ul>
+    </div>
+   </div><!-- Test Modal -->
+   <div id="test-modal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden">
+    <div class="bg-white rounded-xl shadow-lg p-6 w-full max-w-md mx-4 max-h-[90vh] overflow-y-auto">
+     <div class="flex justify-between items-center mb-4">
+      <h3 class="text-xl font-medium text-gray-800">Invest Style Finder</h3><button id="close-modal" class="text-gray-500 hover:text-gray-700 text-xl"> ✕ </button>
+     </div>
+     <div class="text-sm text-gray-600 mb-6">
+      กรุณากรอกข้อมูลและตอบคำถามทั้งหมดเพื่อหาประเภทนักลงทุนที่เหมาะกับคุณ
+     </div><!-- Personal Information -->
+     <div class="mb-6">
+      <h4 class="text-sm font-medium text-gray-700 mb-4">ข้อมูลส่วนตัว</h4>
+      <div class="mb-4"><label for="account-number" class="block text-sm font-medium text-gray-700 mb-2">เลขบัญชี</label> <input type="text" id="account-number" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500" placeholder="กรอกเลขบัญชี" maxlength="20">
+      </div>
+      <div class="grid grid-cols-2 gap-3 mb-4">
+       <div><label for="first-name" class="block text-sm font-medium text-gray-700 mb-2">ชื่อ</label> <input type="text" id="first-name" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500" placeholder="ชื่อ">
+       </div>
+       <div><label for="last-name" class="block text-sm font-medium text-gray-700 mb-2">นามสกุล</label> <input type="text" id="last-name" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500" placeholder="นามสกุล">
+       </div>
+      </div>
+     </div><!-- Investment Style Quiz -->
+     <div class="mb-6"><label class="block text-sm font-medium text-gray-700 mb-3">1. คุณเป็นนักลงทุน Style ใด</label>
+      <div class="space-y-3"><label class="flex items-start p-3 border border-gray-200 rounded-lg hover:bg-gray-50 cursor-pointer"> <input type="radio" name="investment-style" value="C" class="mt-1 mr-3">
+        <div class="text-sm"><span class="font-medium text-gray-800">C: Core Orient Series</span><br><span class="text-gray-600">ผู้ลงทุนที่มีเวลาติดตามไม่มากอย่างน้อย 12 เดือน/ครั้ง</span>
+        </div></label> <label class="flex items-start p-3 border border-gray-200 rounded-lg hover:bg-gray-50 cursor-pointer"> <input type="radio" name="investment-style" value="B" class="mt-1 mr-3">
+        <div class="text-sm"><span class="font-medium text-gray-800">B: Balance Series</span><br><span class="text-gray-600">ผู้ลงทุนมีเวลาติดตามอย่างน้อย 6 เดือน/ครั้ง</span>
+        </div></label> <label class="flex items-start p-3 border border-gray-200 rounded-lg hover:bg-gray-50 cursor-pointer"> <input type="radio" name="investment-style" value="S" class="mt-1 mr-3">
+        <div class="text-sm"><span class="font-medium text-gray-800">S: Satellite Orient Series</span><br><span class="text-gray-600">ผู้ลงทุนมีความ Active ในการติดตามอย่างน้อยๆ 3 เดือน</span>
+        </div></label>
+      </div>
+     </div><!-- Risk Tolerance Quiz -->
+     <div class="mb-6"><label class="block text-sm font-medium text-gray-700 mb-3">2. คุณรับความเสี่ยงได้แค่ไหน</label>
+      <div class="space-y-3"><label class="flex items-start p-3 border border-gray-200 rounded-lg hover:bg-gray-50 cursor-pointer"> <input type="radio" name="risk-tolerance" value="C" class="mt-1 mr-3">
+        <div class="text-sm"><span class="font-medium text-gray-800">C: Conservative</span><br><span class="text-gray-600">เงินลงทุนรับความเสี่ยงได้ต่ำ</span>
+        </div></label> <label class="flex items-start p-3 border border-gray-200 rounded-lg hover:bg-gray-50 cursor-pointer"> <input type="radio" name="risk-tolerance" value="M" class="mt-1 mr-3">
+        <div class="text-sm"><span class="font-medium text-gray-800">M: Moderate</span><br><span class="text-gray-600">เงินลงทุนรับความเสี่ยงได้ปานกลาง</span>
+        </div></label> <label class="flex items-start p-3 border border-gray-200 rounded-lg hover:bg-gray-50 cursor-pointer"> <input type="radio" name="risk-tolerance" value="A" class="mt-1 mr-3">
+        <div class="text-sm"><span class="font-medium text-gray-800">A: Aggressive</span><br><span class="text-gray-600">เงินลงทุนรับความเสี่ยงได้สูง</span>
+        </div></label>
+      </div>
+     </div>
+     <div class="flex justify-end"><button id="submit-test" class="btn bg-purple-600 hover:bg-purple-700 text-white font-medium py-3 px-8 rounded-lg"> ดูผลการทดสอบ </button>
+     </div>
+    </div>
+   </div><!-- Result Modal -->
+   <div id="result-modal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden">
+    <div class="bg-white rounded-xl shadow-lg p-6 w-full max-w-lg mx-4 max-h-[90vh] overflow-y-auto">
+     <div class="text-center mb-6">
+      <div class="w-16 h-16 bg-purple-100 rounded-full flex items-center justify-center mx-auto mb-4">
+       <svg class="w-8 h-8 text-purple-600" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+       </svg>
+      </div>
+      <h3 class="text-xl font-medium text-gray-800 mb-2">ผลการทดสอบ</h3>
+      <div id="test-result" class="text-2xl font-bold text-purple-600 mb-2">
+       CC
+      </div>
+      <div id="test-description" class="text-sm text-gray-600"></div>
+     </div><!-- Investment Portfolio Chart -->
+     <div id="portfolio-chart" class="mb-6">
+      <h4 class="text-lg font-medium text-gray-800 mb-6 text-center">สัดส่วนการลงทุนที่แนะนำ</h4><!-- Doughnut Chart with surrounding labels -->
+      <div class="flex justify-center mb-6">
+       <div class="relative w-80 h-80">
+        <svg class="w-full h-full transform -rotate-90" viewbox="0 0 320 320" id="portfolio-svg"><!-- Chart will be dynamically generated -->
+        </svg><!-- Center Label -->
+        <div class="absolute inset-0 flex items-center justify-center">
+         <div class="text-center bg-white rounded-full w-16 h-16 flex flex-col items-center justify-center shadow-sm border">
+          <div class="text-base font-bold text-gray-800" id="chart-result">
+           CC
+          </div>
+          <div class="text-xs text-gray-600">
+           Portfolio
+          </div>
+         </div>
+        </div><!-- Labels around the chart will be dynamically generated -->
+        <div id="portfolio-labels" class="absolute inset-0"><!-- Labels will be positioned around the chart -->
+        </div>
+       </div>
+      </div><!-- Performance Metrics -->
+      <div class="flex justify-center mb-4">
+       <div class="grid grid-cols-2 gap-4 max-w-sm w-full">
+        <div class="bg-green-50 p-4 rounded-lg text-center border border-green-200">
+         <div class="text-xs text-gray-600 mb-1">
+          Expected Return
+         </div>
+         <div id="expected-return" class="text-lg font-bold text-green-600">
+          5.79%
+         </div>
+        </div>
+        <div class="bg-orange-50 p-4 rounded-lg text-center border border-orange-200">
+         <div class="text-xs text-gray-600 mb-1">
+          Standard Deviation
+         </div>
+         <div id="standard-deviation" class="text-lg font-bold text-orange-600">
+          8.23%
+         </div>
+        </div>
+       </div>
+      </div>
+     </div>
+     <div class="bg-gray-50 p-4 rounded-lg mb-6">
+      <div class="text-sm text-gray-700">
+       <div class="mb-2">
+        <span class="font-medium">เลขบัญชี:</span> <span id="result-account"></span>
+       </div>
+       <div class="mb-2">
+        <span class="font-medium">ชื่อ-นามสกุล:</span> <span id="result-name"></span>
+       </div>
+       <div class="mb-2">
+        <span class="font-medium">วันที่ทำแบบทดสอบ:</span> <span id="test-date"></span>
+       </div>
+       <div>
+        <span class="font-medium">เวลา:</span> <span id="test-time"></span>
+       </div>
+      </div>
+     </div><!-- Port การลงทุน Header -->
+     <div class="mb-4">
+      <div class="bg-blue-50 border border-blue-200 p-4 rounded-lg">
+       <div class="flex items-center">
+        <div class="w-5 h-5 text-blue-600 mr-3">
+         <svg fill="currentColor" viewbox="0 0 20 20"><path d="M3 4a1 1 0 011-1h12a1 1 0 011 1v2a1 1 0 01-1 1H4a1 1 0 01-1-1V4zM3 10a1 1 0 011-1h6a1 1 0 011 1v6a1 1 0 01-1 1H4a1 1 0 01-1-1v-6zM14 9a1 1 0 00-1 1v6a1 1 0 001 1h2a1 1 0 001-1v-6a1 1 0 00-1-1h-2z"></path>
+         </svg>
+        </div>
+        <div>
+         <div class="text-sm font-medium text-blue-800">
+          Port การลงทุน
+         </div>
+         <div class="text-xs text-blue-600">
+          คำนวณจำนวนเงินลงทุนตามสัดส่วน
+         </div>
+        </div>
+       </div>
+      </div>
+     </div><!-- Portfolio Details (Always visible) -->
+     <div id="portfolio-details" class="mb-4">
+      <div class="bg-white border border-gray-200 rounded-lg p-4"><!-- Investment Goal Input -->
+       <div class="mb-4"><label for="investment-goal" class="block text-sm font-medium text-gray-700 mb-2">เป้าหมายการลงทุน (บาท)</label> <input type="number" id="investment-goal" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500" placeholder="เช่น 100,000 บาท" min="1000" step="1000">
+        <div class="text-xs text-gray-500 mt-1">
+         ตั้งเป้าหมายเงินลงทุนที่ต้องการ
+        </div>
+       </div><!-- Investment Period Input -->
+       <div class="mb-4"><label for="investment-years" class="block text-sm font-medium text-gray-700 mb-2">ระยะเวลาการลงทุน (ปี)</label> <input type="number" id="investment-years" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="ขั้นต่ำ 1 ปี" min="1" max="30" step="1">
+        <div class="text-xs text-gray-500 mt-1">
+         ขั้นต่ำ 1 ปี สูงสุด 30 ปี
+        </div>
+       </div><!-- Monthly Investment Input -->
+       <div class="mb-4"><label for="monthly-investment" class="block text-sm font-medium text-gray-700 mb-2">จำนวนเงินลงทุนต่อเดือน (บาท)</label> <input type="number" id="monthly-investment" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="ขั้นต่ำ 3,800 บาท" min="3800" step="100">
+        <div class="text-xs text-gray-500 mt-1">
+         ขั้นต่ำ 3,800 บาท ต่อเดือน
+        </div>
+       </div><!-- Goal Status -->
+       <div id="goal-status" class="mb-6 hidden"><!-- Goal status will be dynamically generated -->
+       </div><!-- Portfolio Chart (Smaller version) -->
+       <div class="mb-6">
+        <h5 class="text-sm font-medium text-gray-800 mb-4 text-center">สัดส่วนการลงทุน</h5>
+        <div class="flex justify-center">
+         <div class="relative w-80 h-80">
+          <svg class="w-full h-full transform -rotate-90" viewbox="0 0 320 320" id="portfolio-detail-svg"><!-- Chart will be dynamically generated -->
+          </svg>
+          <div class="absolute inset-0 flex items-center justify-center">
+           <div class="text-center bg-white rounded-full w-16 h-16 flex flex-col items-center justify-center shadow-sm border">
+            <div class="text-base font-bold text-gray-800" id="chart-detail-result">
+             CC
+            </div>
+            <div class="text-xs text-gray-600">
+             Portfolio
+            </div>
+           </div>
+          </div><!-- Labels around the chart will be dynamically generated -->
+          <div id="portfolio-detail-labels" class="absolute inset-0"><!-- Labels will be positioned around the chart -->
+          </div>
+         </div>
+        </div>
+       </div><!-- Future Value Projection -->
+       <div id="future-value-section" class="mb-6 hidden">
+        <div class="bg-gradient-to-r from-green-50 to-blue-50 border border-green-200 rounded-lg p-4">
+         <h6 class="text-sm font-medium text-gray-800 mb-3 text-center">💰 คาดการณ์มูลค่าการลงทุนในอนาคต</h6>
+         <div class="grid grid-cols-2 gap-4">
+          <div class="text-center">
+           <div class="text-xs text-gray-600 mb-1">
+            เงินลงทุนเริ่มต้น
+           </div>
+           <div id="initial-amount" class="text-lg font-bold text-blue-600">
+            0 บาท
+           </div>
+          </div>
+          <div class="text-center">
+           <div class="text-xs text-gray-600 mb-1">
+            มูลค่าคาดการณ์
+           </div>
+           <div id="future-amount" class="text-lg font-bold text-green-600">
+            0 บาท
+           </div>
+          </div>
+         </div>
+         <div class="mt-3 text-center">
+          <div class="text-xs text-gray-600 mb-1">
+           กำไรคาดการณ์
+          </div>
+          <div id="profit-amount" class="text-xl font-bold text-green-700">
+           0 บาท
+          </div>
+          <div class="text-xs text-gray-500 mt-1">
+           ในระยะเวลา <span id="investment-period">0</span> ปี
+          </div>
+         </div>
+         <div class="mt-3 bg-white rounded-lg p-2">
+          <div class="text-xs text-gray-500 text-center mb-1">
+           Expected Return: <span id="display-return">0%</span> ต่อปี
+          </div>
+          <div class="bg-gray-200 rounded-full h-2 overflow-hidden">
+           <div id="return-progress" class="bg-gradient-to-r from-green-400 to-green-600 h-full rounded-full transition-all duration-1000" style="width: 0%"></div>
+          </div>
+         </div>
+        </div>
+       </div><!-- Investment Table -->
+       <div class="overflow-x-auto">
+        <table class="w-full text-sm">
+         <thead>
+          <tr class="bg-gray-50">
+           <th class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase">กองทุน</th>
+           <th class="px-3 py-2 text-center text-xs font-medium text-gray-500 uppercase">สัดส่วน</th>
+           <th class="px-3 py-2 text-right text-xs font-medium text-gray-500 uppercase">จำนวนเงิน</th>
+          </tr>
+         </thead>
+         <tbody id="investment-table-body" class="divide-y divide-gray-200"><!-- Table rows will be dynamically generated -->
+         </tbody>
+         <tfoot>
+          <tr class="bg-gray-50 font-medium">
+           <td class="px-3 py-2 text-sm text-gray-800">รวม</td>
+           <td class="px-3 py-2 text-center text-sm text-gray-800">100%</td>
+           <td class="px-3 py-2 text-right text-sm text-gray-800" id="total-amount">0 บาท</td>
+          </tr>
+         </tfoot>
+        </table>
+       </div>
+      </div>
+     </div><!-- Investment Reminder -->
+     <div id="investment-reminder" class="bg-blue-50 p-4 rounded-lg mb-6 border border-blue-200">
+      <div class="flex items-start">
+       <div class="w-5 h-5 text-blue-600 mr-2 mt-0.5">
+        <svg fill="currentColor" viewbox="0 0 20 20"><path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd"></path>
+        </svg>
+       </div>
+       <div>
+        <div class="text-sm font-medium text-blue-800 mb-1">
+         คำแนะนำการติดตาม
+        </div>
+        <div id="reminder-text" class="text-sm text-blue-700"></div>
+       </div>
+      </div>
+     </div>
+     <div class="flex justify-center"><button id="close-result" class="btn bg-purple-600 hover:bg-purple-700 text-white font-medium py-2 px-8 rounded-lg"> ปิด </button>
+     </div>
+    </div>
+   </div>
+  </div>
+  <script>
+        // Google Apps Script URL
+        const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyPLBHk1cpK65U5v2DSvJLifixHF2nGvykQgtCZQE4Ih7VjnIpEhbpIb0eDaAbLJgoy/exec';
+        const SPREADSHEET_ID = '1oxoTs8ncgYQqw8msp-1Vzt_fv5ww5DdPUw3AfaSXXOw';
+        
+        // ข้อมูลการทดสอบ
+        let testResults = JSON.parse(localStorage.getItem('testResults')) || [];
+        
+        const monthNames = ["", "มกราคม", "กุมภาพันธ์", "มีนาคม", "เมษายน", "พฤษภาคม", "มิถุนายน", "กรกฎาคม", "สิงหาคม", "กันยายน", "ตุลาคม", "พฤศจิกายน", "ธันวาคม"];
+        
+        // เริ่มต้นแอปพลิเคชัน
+        document.addEventListener('DOMContentLoaded', function() {
+            updateSummary();
+            updateTestHistory();
+            setupEventListeners();
+        });
+        
+        function setupEventListeners() {
+            document.getElementById('add-test').addEventListener('click', openTestModal);
+            document.getElementById('close-modal').addEventListener('click', closeTestModal);
+            document.getElementById('submit-test').addEventListener('click', submitTest);
+            document.getElementById('close-result').addEventListener('click', closeResultModal);
+            
+            // ปิดโมดัลเมื่อคลิกด้านนอก
+            document.getElementById('test-modal').addEventListener('click', function(e) {
+                if (e.target === this) closeTestModal();
+            });
+            
+            document.getElementById('result-modal').addEventListener('click', function(e) {
+                if (e.target === this) closeResultModal();
+            });
+        }
+        
+        function setupPortfolioEventListeners() {
+            // Investment goal input
+            document.getElementById('investment-goal').addEventListener('input', function() {
+                updateGoalStatus();
+                saveInvestmentData();
+            });
+            
+            // Investment years input
+            document.getElementById('investment-years').addEventListener('input', function() {
+                const monthlyAmount = parseFloat(document.getElementById('monthly-investment').value) || 0;
+                const years = parseFloat(this.value) || 0;
+                
+                if (monthlyAmount >= 3800 && years >= 1) {
+                    updateInvestmentTable(monthlyAmount);
+                    updateGoalStatus();
+                }
+                saveInvestmentData();
+            });
+            
+            // Monthly investment input
+            document.getElementById('monthly-investment').addEventListener('input', function() {
+                const monthlyAmount = parseFloat(this.value) || 0;
+                const years = parseFloat(document.getElementById('investment-years').value) || 0;
+                
+                if (monthlyAmount >= 3800 && years >= 1) {
+                    updateInvestmentTable(monthlyAmount);
+                    updateGoalStatus();
+                } else {
+                    clearInvestmentTable();
+                }
+                saveInvestmentData();
+            });
+        }
+        
+        function openTestModal() {
+            // Reset form
+            document.getElementById('account-number').value = '';
+            document.getElementById('first-name').value = '';
+            document.getElementById('last-name').value = '';
+            document.querySelectorAll('input[name="investment-style"]').forEach(radio => radio.checked = false);
+            document.querySelectorAll('input[name="risk-tolerance"]').forEach(radio => radio.checked = false);
+            
+            document.getElementById('test-modal').classList.remove('hidden');
+            document.getElementById('account-number').focus();
+        }
+        
+        function closeTestModal() {
+            document.getElementById('test-modal').classList.add('hidden');
+        }
+        
+        function closeResultModal() {
+            document.getElementById('result-modal').classList.add('hidden');
+        }
+        
+        function saveInvestmentData() {
+            const goalAmount = parseFloat(document.getElementById('investment-goal').value) || 0;
+            const years = parseFloat(document.getElementById('investment-years').value) || 0;
+            const monthlyAmount = parseFloat(document.getElementById('monthly-investment').value) || 0;
+            
+            if (testResults.length > 0) {
+                const latestTest = testResults[testResults.length - 1];
+                latestTest.investmentGoal = goalAmount;
+                latestTest.investmentYears = years;
+                latestTest.monthlyInvestment = monthlyAmount;
+                
+                localStorage.setItem('testResults', JSON.stringify(testResults));
+            }
+        }
+        
+        function formatDateTime(date) {
+            const thaiDate = new Date(date);
+            const day = thaiDate.getDate();
+            const month = thaiDate.getMonth() + 1;
+            const year = thaiDate.getFullYear() + 543;
+            const hours = thaiDate.getHours().toString().padStart(2, '0');
+            const minutes = thaiDate.getMinutes().toString().padStart(2, '0');
+            
+            return {
+                date: `${day} ${monthNames[month]} ${year}`,
+                time: `${hours}:${minutes} น.`
+            };
+        }
+        
+        function getResultDescription(style, risk) {
+            const styleDescriptions = {
+                'C': 'ดู Port ปีละครั้ง',
+                'B': 'นานๆทีดู Port',
+                'S': 'ขยันดู Port'
+            };
+            
+            const riskDescriptions = {
+                'C': 'โตช้าแต่มั่นคง',
+                'M': 'ค่อยๆโตแบบระมัดระวัง',
+                'A': 'กล้าได้กล้าเสีย'
+            };
+            
+            const styleDesc = styleDescriptions[style] || '';
+            const riskDesc = riskDescriptions[risk] || '';
+            
+            return `${styleDesc} | ${riskDesc}`;
+        }
+        
+        function submitTest() {
+            const accountNumber = document.getElementById('account-number').value.trim();
+            const firstName = document.getElementById('first-name').value.trim();
+            const lastName = document.getElementById('last-name').value.trim();
+            const investmentStyle = document.querySelector('input[name="investment-style"]:checked');
+            const riskTolerance = document.querySelector('input[name="risk-tolerance"]:checked');
+            
+            if (!accountNumber) {
+                Swal.fire({
+                    icon: 'warning',
+                    title: 'กรุณากรอกข้อมูล',
+                    text: 'กรุณากรอกเลขบัญชี',
+                    confirmButtonText: 'ตกลง'
+                });
+                return;
+            }
+            
+            if (!firstName) {
+                Swal.fire({
+                    icon: 'warning',
+                    title: 'กรุณากรอกข้อมูล',
+                    text: 'กรุณากรอกชื่อ',
+                    confirmButtonText: 'ตกลง'
+                });
+                return;
+            }
+            
+            if (!lastName) {
+                Swal.fire({
+                    icon: 'warning',
+                    title: 'กรุณากรอกข้อมูล',
+                    text: 'กรุณากรอกนามสกุล',
+                    confirmButtonText: 'ตกลง'
+                });
+                return;
+            }
+            
+            if (!investmentStyle) {
+                Swal.fire({
+                    icon: 'warning',
+                    title: 'กรุณาเลือกข้อมูล',
+                    text: 'กรุณาเลือก Style นักลงทุน',
+                    confirmButtonText: 'ตกลง'
+                });
+                return;
+            }
+            
+            if (!riskTolerance) {
+                Swal.fire({
+                    icon: 'warning',
+                    title: 'กรุณาเลือกข้อมูล',
+                    text: 'กรุณาเลือกระดับความเสี่ยง',
+                    confirmButtonText: 'ตกลง'
+                });
+                return;
+            }
+            
+            const now = new Date();
+            const result = investmentStyle.value + riskTolerance.value;
+            
+            const testData = {
+                id: Date.now(),
+                accountNumber: accountNumber,
+                firstName: firstName,
+                lastName: lastName,
+                fullName: firstName + ' ' + lastName,
+                investmentStyle: investmentStyle.value,
+                riskTolerance: riskTolerance.value,
+                result: result,
+                timestamp: now.toISOString(),
+                date: now.toISOString().split('T')[0]
+            };
+            
+            // แสดง loading
+            Swal.fire({
+                title: 'กำลังประมวลผล...',
+                text: 'กรุณารอสักครู่',
+                allowOutsideClick: false,
+                didOpen: () => {
+                    Swal.showLoading();
+                }
+            });
+            
+            // บันทึกข้อมูลไปยัง Google Sheets
+            saveTestToGoogleSheets(testData);
+        }
+        
+        function saveTestToGoogleSheets(testData) {
+            // บันทึกข้อมูลใน localStorage ก่อน (เป็น backup)
+            testResults.push(testData);
+            localStorage.setItem('testResults', JSON.stringify(testResults));
+            
+            // อัปเดต UI ทันที
+            updateSummary();
+            updateTestHistory();
+            closeTestModal();
+            
+            // แสดงผลการทดสอบ
+            showTestResult(testData);
+            
+            // สร้างชื่อฟังก์ชันคอลแบ็คที่ไม่ซ้ำกัน
+            const callbackName = 'saveCallback_' + Date.now() + '_' + Math.floor(Math.random() * 1000);
+            
+            window[callbackName] = function(response) {
+                console.log('Google Sheets Response:', response);
+                // ลบฟังก์ชันคอลแบ็คหลังจากใช้งาน
+                delete window[callbackName];
+                
+                if (response && response.success) {
+                    console.log('ข้อมูลถูกบันทึกลง Google Sheets เรียบร้อยแล้ว');
+                } else {
+                    console.error('Google Sheets Error:', response);
+                }
+            };
+            
+            // สร้าง URL สำหรับ JSONP
+            const params = new URLSearchParams({
+                action: 'saveData',
+                spreadsheetId: SPREADSHEET_ID,
+                date: testData.date,
+                accountNumber: testData.accountNumber,
+                firstName: testData.firstName,
+                lastName: testData.lastName,
+                investmentStyle: testData.investmentStyle,
+                riskTolerance: testData.riskTolerance,
+                result: testData.result,
+                deed: `ค้นหา Style ลงทุน - ${testData.fullName} (${testData.accountNumber}) - ผลลัพธ์: ${testData.result}`,
+                details: `เลขบัญชี: ${testData.accountNumber}, ชื่อ: ${testData.firstName}, นามสกุล: ${testData.lastName}, Style: ${testData.investmentStyle}, Risk: ${testData.riskTolerance}`,
+                timestamp: testData.timestamp,
+                callback: callbackName
+            });
+            
+            const fullUrl = `${SCRIPT_URL}?${params.toString()}`;
+            console.log('Sending to Google Sheets:', fullUrl);
+            
+            // สร้าง script element สำหรับ JSONP
+            const script = document.createElement('script');
+            script.src = fullUrl;
+            script.id = callbackName;
+            
+            // จัดการเมื่อโหลดสำเร็จ
+            script.onload = function() {
+                console.log('Script loaded successfully');
+                setTimeout(() => {
+                    if (document.getElementById(callbackName)) {
+                        document.body.removeChild(script);
+                    }
+                }, 1000);
+            };
+            
+            // จัดการเมื่อเกิดข้อผิดพลาด
+            script.onerror = function() {
+                console.error('Script loading failed');
+                if (document.getElementById(callbackName)) {
+                    document.body.removeChild(script);
+                }
+                delete window[callbackName];
+            };
+            
+            document.body.appendChild(script);
+            
+            // ตั้งเวลาหมดอายุ 10 วินาที
+            setTimeout(() => {
+                if (document.getElementById(callbackName)) {
+                    document.body.removeChild(script);
+                    delete window[callbackName];
+                    console.log('Request timeout');
+                }
+            }, 10000);
+        }
+        
+        function getPerformanceData(result) {
+            // Performance metrics for different investor types
+            const performance = {
+                'CC': { expectedReturn: '5.79%', standardDeviation: '8.23%' },
+                'CM': { expectedReturn: '7.02%', standardDeviation: '10.04%' },
+                'CA': { expectedReturn: '8.24%', standardDeviation: '12.18%' },
+                'BC': { expectedReturn: '5.85%', standardDeviation: '8.27%' },
+                'BM': { expectedReturn: '7.09%', standardDeviation: '10.17%' },
+                'BA': { expectedReturn: '8.33%', standardDeviation: '12.36%' },
+                'SC': { expectedReturn: '5.9%', standardDeviation: '8.34%' },
+                'SM': { expectedReturn: '7.16%', standardDeviation: '10.32%' },
+                'SA': { expectedReturn: '8.42%', standardDeviation: '12.57%' }
+            };
+            
+            return performance[result] || performance['CC'];
+        }
+        
+        function getPortfolioData(result) {
+            // Portfolio allocations for different investor types (for display chart)
+            const portfolios = {
+                'CC': [
+                    { name: 'Core Fund', percentage: 70, color: '#3b82f6', bgColor: 'bg-blue-50', textColor: 'text-blue-600', fundCode: 'BMAPS25' },
+                    { name: 'Local Bond', percentage: 10.5, color: '#10b981', bgColor: 'bg-green-50', textColor: 'text-green-600', fundCode: 'UGISFX-N' },
+                    { name: 'Global Bond', percentage: 10.5, color: '#f59e0b', bgColor: 'bg-yellow-50', textColor: 'text-yellow-600', fundCode: 'K-FIXED-A' },
+                    { name: 'Global Equity DM', percentage: 6.3, color: '#ef4444', bgColor: 'bg-red-50', textColor: 'text-red-600', fundCode: 'K-GSELECTU-A(A)' },
+                    { name: 'Global Equity EM', percentage: 2.7, color: '#8b5cf6', bgColor: 'bg-purple-50', textColor: 'text-purple-600', fundCode: 'ES-ALOVE-UH' }
+                ],
+                'CM': [
+                    { name: 'Core Fund', percentage: 70, color: '#3b82f6', bgColor: 'bg-blue-50', textColor: 'text-blue-600', fundCode: 'BMAPS55' },
+                    { name: 'Local Bond', percentage: 7.5, color: '#10b981', bgColor: 'bg-green-50', textColor: 'text-green-600', fundCode: 'UGISFX-N' },
+                    { name: 'Global Bond', percentage: 7.5, color: '#f59e0b', bgColor: 'bg-yellow-50', textColor: 'text-yellow-600', fundCode: 'K-FIXED-A' },
+                    { name: 'Global Equity DM', percentage: 10.5, color: '#ef4444', bgColor: 'bg-red-50', textColor: 'text-red-600', fundCode: 'K-GSELECTU-A(A)' },
+                    { name: 'Global Equity EM', percentage: 4.5, color: '#8b5cf6', bgColor: 'bg-purple-50', textColor: 'text-purple-600', fundCode: 'ES-ALOVE-UH' }
+                ],
+                'CA': [
+                    { name: 'Core Fund', percentage: 70, color: '#3b82f6', bgColor: 'bg-blue-50', textColor: 'text-blue-600', fundCode: 'BMAPS100' },
+                    { name: 'Local Bond', percentage: 4.5, color: '#10b981', bgColor: 'bg-green-50', textColor: 'text-green-600', fundCode: 'UGISFX-N' },
+                    { name: 'Global Bond', percentage: 4.5, color: '#f59e0b', bgColor: 'bg-yellow-50', textColor: 'text-yellow-600', fundCode: 'K-FIXED-A' },
+                    { name: 'Global Equity DM', percentage: 14.7, color: '#ef4444', bgColor: 'bg-red-50', textColor: 'text-red-600', fundCode: 'K-GSELECTU-A(A)' },
+                    { name: 'Global Equity EM', percentage: 6.3, color: '#8b5cf6', bgColor: 'bg-purple-50', textColor: 'text-purple-600', fundCode: 'ES-ALOVE-UH' }
+                ],
+                'BC': [
+                    { name: 'Core Fund', percentage: 50, color: '#3b82f6', bgColor: 'bg-blue-50', textColor: 'text-blue-600', fundCode: 'BMAPS25' },
+                    { name: 'Local Bond', percentage: 17.5, color: '#10b981', bgColor: 'bg-green-50', textColor: 'text-green-600', fundCode: 'UGISFX-N' },
+                    { name: 'Global Bond', percentage: 17.5, color: '#f59e0b', bgColor: 'bg-yellow-50', textColor: 'text-yellow-600', fundCode: 'K-FIXED-A' },
+                    { name: 'Global Equity DM', percentage: 10.5, color: '#ef4444', bgColor: 'bg-red-50', textColor: 'text-red-600', fundCode: 'K-GSELECTU-A(A)' },
+                    { name: 'Global Equity EM', percentage: 4.5, color: '#8b5cf6', bgColor: 'bg-purple-50', textColor: 'text-purple-600', fundCode: 'ES-ALOVE-UH' }
+                ],
+                'BM': [
+                    { name: 'Core Fund', percentage: 50, color: '#3b82f6', bgColor: 'bg-blue-50', textColor: 'text-blue-600', fundCode: 'BMAPS55' },
+                    { name: 'Local Bond', percentage: 12.5, color: '#10b981', bgColor: 'bg-green-50', textColor: 'text-green-600', fundCode: 'UGISFX-N' },
+                    { name: 'Global Bond', percentage: 12.5, color: '#f59e0b', bgColor: 'bg-yellow-50', textColor: 'text-yellow-600', fundCode: 'K-FIXED-A' },
+                    { name: 'Global Equity DM', percentage: 17.5, color: '#ef4444', bgColor: 'bg-red-50', textColor: 'text-red-600', fundCode: 'K-GSELECTU-A(A)' },
+                    { name: 'Global Equity EM', percentage: 7.5, color: '#8b5cf6', bgColor: 'bg-purple-50', textColor: 'text-purple-600', fundCode: 'ES-ALOVE-UH' }
+                ],
+                'BA': [
+                    { name: 'Core Fund', percentage: 50, color: '#3b82f6', bgColor: 'bg-blue-50', textColor: 'text-blue-600', fundCode: 'BMAPS100' },
+                    { name: 'Local Bond', percentage: 7.5, color: '#10b981', bgColor: 'bg-green-50', textColor: 'text-green-600', fundCode: 'UGISFX-N' },
+                    { name: 'Global Bond', percentage: 7.5, color: '#f59e0b', bgColor: 'bg-yellow-50', textColor: 'text-yellow-600', fundCode: 'K-FIXED-A' },
+                    { name: 'Global Equity DM', percentage: 24.5, color: '#ef4444', bgColor: 'bg-red-50', textColor: 'text-red-600', fundCode: 'K-GSELECTU-A(A)' },
+                    { name: 'Global Equity EM', percentage: 10.5, color: '#8b5cf6', bgColor: 'bg-purple-50', textColor: 'text-purple-600', fundCode: 'ES-ALOVE-UH' }
+                ],
+                'SC': [
+                    { name: 'Core Fund', percentage: 30, color: '#3b82f6', bgColor: 'bg-blue-50', textColor: 'text-blue-600', fundCode: 'BMAPS25' },
+                    { name: 'Local Bond', percentage: 24.5, color: '#10b981', bgColor: 'bg-green-50', textColor: 'text-green-600', fundCode: 'UGISFX-N' },
+                    { name: 'Global Bond', percentage: 24.5, color: '#f59e0b', bgColor: 'bg-yellow-50', textColor: 'text-yellow-600', fundCode: 'K-FIXED-A' },
+                    { name: 'Global Equity DM', percentage: 14.7, color: '#ef4444', bgColor: 'bg-red-50', textColor: 'text-red-600', fundCode: 'K-GSELECTU-A(A)' },
+                    { name: 'Global Equity EM', percentage: 6.3, color: '#8b5cf6', bgColor: 'bg-purple-50', textColor: 'text-purple-600', fundCode: 'ES-ALOVE-UH' }
+                ],
+                'SM': [
+                    { name: 'Core Fund', percentage: 30, color: '#3b82f6', bgColor: 'bg-blue-50', textColor: 'text-blue-600', fundCode: 'BMAPS55' },
+                    { name: 'Local Bond', percentage: 17.5, color: '#10b981', bgColor: 'bg-green-50', textColor: 'text-green-600', fundCode: 'UGISFX-N' },
+                    { name: 'Global Bond', percentage: 17.5, color: '#f59e0b', bgColor: 'bg-yellow-50', textColor: 'text-yellow-600', fundCode: 'K-FIXED-A' },
+                    { name: 'Global Equity DM', percentage: 24.5, color: '#ef4444', bgColor: 'bg-red-50', textColor: 'text-red-600', fundCode: 'K-GSELECTU-A(A)' },
+                    { name: 'Global Equity EM', percentage: 10.5, color: '#8b5cf6', bgColor: 'bg-purple-50', textColor: 'text-purple-600', fundCode: 'ES-ALOVE-UH' }
+                ],
+                'SA': [
+                    { name: 'Core Fund', percentage: 30, color: '#3b82f6', bgColor: 'bg-blue-50', textColor: 'text-blue-600', fundCode: 'BMAPS100' },
+                    { name: 'Local Bond', percentage: 10.5, color: '#10b981', bgColor: 'bg-green-50', textColor: 'text-green-600', fundCode: 'UGISFX-N' },
+                    { name: 'Global Bond', percentage: 10.5, color: '#f59e0b', bgColor: 'bg-yellow-50', textColor: 'text-yellow-600', fundCode: 'K-FIXED-A' },
+                    { name: 'Global Equity DM', percentage: 34.3, color: '#ef4444', bgColor: 'bg-red-50', textColor: 'text-red-600', fundCode: 'K-GSELECTU-A(A)' },
+                    { name: 'Global Equity EM', percentage: 14.7, color: '#8b5cf6', bgColor: 'bg-purple-50', textColor: 'text-purple-600', fundCode: 'ES-ALOVE-UH' }
+                ]
+            };
+            
+            return portfolios[result] || portfolios['CC'];
+        }
+        
+        function createDoughnutChart(portfolioData) {
+            const svg = document.getElementById('portfolio-svg');
+            const labelsContainer = document.getElementById('portfolio-labels');
+            
+            // Clear existing content
+            svg.innerHTML = '';
+            labelsContainer.innerHTML = '';
+            
+            const centerX = 160;
+            const centerY = 160;
+            const outerRadius = 90;
+            const innerRadius = 55;
+            
+            let currentAngle = 0;
+            
+            // Create chart segments using path elements
+            portfolioData.forEach((item, index) => {
+                const percentage = item.percentage;
+                const angle = (percentage / 100) * 360;
+                const startAngle = currentAngle;
+                const endAngle = currentAngle + angle;
+                const midAngle = startAngle + (angle / 2);
+                
+                // Convert angles to radians (start from right, 0 degrees)
+                const startAngleRad = startAngle * (Math.PI / 180);
+                const endAngleRad = endAngle * (Math.PI / 180);
+                const midAngleRad = midAngle * (Math.PI / 180);
+                
+                // Calculate outer arc points
+                const x1Outer = centerX + outerRadius * Math.cos(startAngleRad);
+                const y1Outer = centerY + outerRadius * Math.sin(startAngleRad);
+                const x2Outer = centerX + outerRadius * Math.cos(endAngleRad);
+                const y2Outer = centerY + outerRadius * Math.sin(endAngleRad);
+                
+                // Calculate inner arc points
+                const x1Inner = centerX + innerRadius * Math.cos(startAngleRad);
+                const y1Inner = centerY + innerRadius * Math.sin(startAngleRad);
+                const x2Inner = centerX + innerRadius * Math.cos(endAngleRad);
+                const y2Inner = centerY + innerRadius * Math.sin(endAngleRad);
+                
+                // Large arc flag
+                const largeArcFlag = angle > 180 ? 1 : 0;
+                
+                // Create doughnut segment path
+                const pathData = [
+                    `M ${x1Outer} ${y1Outer}`,
+                    `A ${outerRadius} ${outerRadius} 0 ${largeArcFlag} 1 ${x2Outer} ${y2Outer}`,
+                    `L ${x2Inner} ${y2Inner}`,
+                    `A ${innerRadius} ${innerRadius} 0 ${largeArcFlag} 0 ${x1Inner} ${y1Inner}`,
+                    'Z'
+                ].join(' ');
+                
+                const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+                path.setAttribute('d', pathData);
+                path.setAttribute('fill', item.color);
+                path.setAttribute('stroke', 'white');
+                path.setAttribute('stroke-width', '2');
+                path.setAttribute('opacity', '0.9');
+                
+                // Add hover effect
+                path.setAttribute('style', 'transition: all 0.2s ease; cursor: pointer;');
+                path.addEventListener('mouseenter', () => {
+                    path.setAttribute('opacity', '1');
+                    path.setAttribute('transform', 'scale(1.02)');
+                    path.setAttribute('transform-origin', '160 160');
+                });
+                path.addEventListener('mouseleave', () => {
+                    path.setAttribute('opacity', '0.9');
+                    path.setAttribute('transform', 'scale(1)');
+                });
+                
+                svg.appendChild(path);
+                
+                // Calculate label position to match the segment direction exactly
+                let labelRadius = 120;
+                let labelAngle = midAngle;
+                
+                // Adjust label distance based on segment size
+                if (percentage < 10) {
+                    labelRadius = 135; // Push small segments further out
+                } else if (percentage < 20) {
+                    labelRadius = 125;
+                } else {
+                    labelRadius = 115; // Keep large segments closer
+                }
+                
+                // Convert to radians and calculate position - adjust for SVG rotation (-90 degrees)
+                const labelAngleRad = (labelAngle - 90) * (Math.PI / 180);
+                const labelX = centerX + labelRadius * Math.cos(labelAngleRad);
+                const labelY = centerY + labelRadius * Math.sin(labelAngleRad);
+                
+                // Create label element
+                const label = document.createElement('div');
+                label.className = `absolute transform -translate-x-1/2 -translate-y-1/2 cursor-pointer transition-all hover:scale-105`;
+                label.style.left = `${labelX}px`;
+                label.style.top = `${labelY}px`;
+                label.style.minWidth = '80px';
+                label.style.fontSize = '11px';
+                label.style.fontWeight = '500';
+                label.innerHTML = `
+                    <div class="text-center">
+                        <div class="flex items-center justify-center mb-1">
+                            <div class="w-2 h-2 rounded-full mr-1" style="background-color: ${item.color}"></div>
+                            <div class="text-xs font-bold" style="color: ${item.color}">${item.percentage}%</div>
+                        </div>
+                        <div class="text-xs font-medium text-gray-700 leading-tight">${item.name}</div>
+                    </div>
+                `;
+                
+                // Add hover interaction between label and chart
+                label.addEventListener('mouseenter', () => {
+                    path.setAttribute('opacity', '1');
+                    path.setAttribute('transform', 'scale(1.02)');
+                    path.setAttribute('transform-origin', '160 160');
+                });
+                label.addEventListener('mouseleave', () => {
+                    path.setAttribute('opacity', '0.9');
+                    path.setAttribute('transform', 'scale(1)');
+                });
+                
+                labelsContainer.appendChild(label);
+                
+                currentAngle += angle;
+            });
+            
+            // Add center circle with subtle shadow
+            const centerCircle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+            centerCircle.setAttribute('cx', centerX);
+            centerCircle.setAttribute('cy', centerY);
+            centerCircle.setAttribute('r', innerRadius);
+            centerCircle.setAttribute('fill', 'white');
+            centerCircle.setAttribute('stroke', '#e5e7eb');
+            centerCircle.setAttribute('stroke-width', '1');
+            centerCircle.setAttribute('filter', 'drop-shadow(0 1px 2px rgba(0,0,0,0.1))');
+            svg.appendChild(centerCircle);
+        }
+        
+        function getInvestmentReminder(investmentStyle) {
+            const reminders = {
+                'C': 'อย่าลืมดูการลงทุนปีละ 1 ครั้ง',
+                'B': 'อย่าลืมดูการลงทุน 6 เดือนครั้ง',
+                'S': 'อย่าลืมดูการลงทุน 3 เดือนครั้ง'
+            };
+            
+            return reminders[investmentStyle] || 'อย่าลืมติดตามการลงทุนของคุณเป็นประจำ';
+        }
+        
+        function createDetailDoughnutChart(portfolioData) {
+            const svg = document.getElementById('portfolio-detail-svg');
+            const labelsContainer = document.getElementById('portfolio-detail-labels');
+            
+            // Clear existing content
+            svg.innerHTML = '';
+            labelsContainer.innerHTML = '';
+            
+            const centerX = 160;
+            const centerY = 160;
+            const outerRadius = 90;
+            const innerRadius = 55;
+            
+            let currentAngle = 0;
+            
+            // Create chart segments using path elements
+            portfolioData.forEach((item, index) => {
+                const percentage = item.percentage;
+                const angle = (percentage / 100) * 360;
+                const startAngle = currentAngle;
+                const endAngle = currentAngle + angle;
+                const midAngle = startAngle + (angle / 2);
+                
+                // Convert angles to radians (start from right, 0 degrees)
+                const startAngleRad = startAngle * (Math.PI / 180);
+                const endAngleRad = endAngle * (Math.PI / 180);
+                const midAngleRad = midAngle * (Math.PI / 180);
+                
+                // Calculate outer arc points
+                const x1Outer = centerX + outerRadius * Math.cos(startAngleRad);
+                const y1Outer = centerY + outerRadius * Math.sin(startAngleRad);
+                const x2Outer = centerX + outerRadius * Math.cos(endAngleRad);
+                const y2Outer = centerY + outerRadius * Math.sin(endAngleRad);
+                
+                // Calculate inner arc points
+                const x1Inner = centerX + innerRadius * Math.cos(startAngleRad);
+                const y1Inner = centerY + innerRadius * Math.sin(startAngleRad);
+                const x2Inner = centerX + innerRadius * Math.cos(endAngleRad);
+                const y2Inner = centerY + innerRadius * Math.sin(endAngleRad);
+                
+                // Large arc flag
+                const largeArcFlag = angle > 180 ? 1 : 0;
+                
+                // Create doughnut segment path
+                const pathData = [
+                    `M ${x1Outer} ${y1Outer}`,
+                    `A ${outerRadius} ${outerRadius} 0 ${largeArcFlag} 1 ${x2Outer} ${y2Outer}`,
+                    `L ${x2Inner} ${y2Inner}`,
+                    `A ${innerRadius} ${innerRadius} 0 ${largeArcFlag} 0 ${x1Inner} ${y1Inner}`,
+                    'Z'
+                ].join(' ');
+                
+                const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+                path.setAttribute('d', pathData);
+                path.setAttribute('fill', item.color);
+                path.setAttribute('stroke', 'white');
+                path.setAttribute('stroke-width', '2');
+                path.setAttribute('opacity', '0.9');
+                
+                // Add hover effect
+                path.setAttribute('style', 'transition: all 0.2s ease; cursor: pointer;');
+                path.addEventListener('mouseenter', () => {
+                    path.setAttribute('opacity', '1');
+                    path.setAttribute('transform', 'scale(1.02)');
+                    path.setAttribute('transform-origin', '160 160');
+                });
+                path.addEventListener('mouseleave', () => {
+                    path.setAttribute('opacity', '0.9');
+                    path.setAttribute('transform', 'scale(1)');
+                });
+                
+                svg.appendChild(path);
+                
+                // Calculate label position to match the segment direction exactly
+                let labelRadius = 120;
+                let labelAngle = midAngle;
+                
+                // Adjust label distance based on segment size
+                if (percentage < 10) {
+                    labelRadius = 135; // Push small segments further out
+                } else if (percentage < 20) {
+                    labelRadius = 125;
+                } else {
+                    labelRadius = 115; // Keep large segments closer
+                }
+                
+                // Convert to radians and calculate position - adjust for SVG rotation (-90 degrees)
+                const labelAngleRad = (labelAngle - 90) * (Math.PI / 180);
+                const labelX = centerX + labelRadius * Math.cos(labelAngleRad);
+                const labelY = centerY + labelRadius * Math.sin(labelAngleRad);
+                
+                // Create label element with fund code and percentage
+                const label = document.createElement('div');
+                label.className = `absolute transform -translate-x-1/2 -translate-y-1/2 cursor-pointer transition-all hover:scale-105`;
+                label.style.left = `${labelX}px`;
+                label.style.top = `${labelY}px`;
+                label.style.minWidth = '80px';
+                label.style.fontSize = '11px';
+                label.style.fontWeight = '500';
+                label.innerHTML = `
+                    <div class="text-center">
+                        <div class="flex items-center justify-center mb-1">
+                            <div class="w-2 h-2 rounded-full mr-1" style="background-color: ${item.color}"></div>
+                            <div class="text-xs font-bold" style="color: ${item.color}">${item.percentage}%</div>
+                        </div>
+                        <div class="text-xs font-medium text-gray-700 leading-tight">${item.fundCode || item.name}</div>
+                    </div>
+                `;
+                
+                // Add hover interaction between label and chart
+                label.addEventListener('mouseenter', () => {
+                    path.setAttribute('opacity', '1');
+                    path.setAttribute('transform', 'scale(1.02)');
+                    path.setAttribute('transform-origin', '160 160');
+                });
+                label.addEventListener('mouseleave', () => {
+                    path.setAttribute('opacity', '0.9');
+                    path.setAttribute('transform', 'scale(1)');
+                });
+                
+                labelsContainer.appendChild(label);
+                
+                currentAngle += angle;
+            });
+            
+            // Add center circle with subtle shadow
+            const centerCircle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+            centerCircle.setAttribute('cx', centerX);
+            centerCircle.setAttribute('cy', centerY);
+            centerCircle.setAttribute('r', innerRadius);
+            centerCircle.setAttribute('fill', 'white');
+            centerCircle.setAttribute('stroke', '#e5e7eb');
+            centerCircle.setAttribute('stroke-width', '1');
+            centerCircle.setAttribute('filter', 'drop-shadow(0 1px 2px rgba(0,0,0,0.1))');
+            svg.appendChild(centerCircle);
+        }
+        
+        function updateInvestmentTable(monthlyAmount) {
+            const result = document.getElementById('test-result').textContent;
+            const portfolioData = getPortfolioData(result);
+            const tableBody = document.getElementById('investment-table-body');
+            const years = parseFloat(document.getElementById('investment-years').value) || 0;
+            
+            tableBody.innerHTML = '';
+            
+            portfolioData.forEach(item => {
+                const monthlyAmountPerFund = Math.round((monthlyAmount * item.percentage) / 100);
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td class="px-3 py-2">
+                        <div class="flex items-center">
+                            <div class="w-3 h-3 rounded-full mr-2" style="background-color: ${item.color}"></div>
+                            <div>
+                                <div class="text-sm font-medium text-gray-800">${item.fundCode}</div>
+                                <div class="text-xs text-gray-500">${item.name}</div>
+                            </div>
+                        </div>
+                    </td>
+                    <td class="px-3 py-2 text-center text-sm text-gray-600">${item.percentage}%</td>
+                    <td class="px-3 py-2 text-right text-sm font-medium text-gray-800">${monthlyAmountPerFund.toLocaleString()} บาท/เดือน</td>
+                `;
+                tableBody.appendChild(row);
+            });
+            
+            document.getElementById('total-amount').textContent = `${monthlyAmount.toLocaleString()} บาท/เดือน`;
+            
+            // Update future value projection if years is provided
+            if (years >= 1) {
+                updateFutureValueProjection(monthlyAmount, years, result);
+            } else {
+                document.getElementById('future-value-section').classList.add('hidden');
+            }
+        }
+        
+        function updateFutureValueProjection(totalAmount, years, result) {
+            const performanceData = getPerformanceData(result);
+            const expectedReturnStr = performanceData.expectedReturn;
+            const expectedReturn = parseFloat(expectedReturnStr.replace('%', '')) / 100;
+            const monthlyAmount = parseFloat(document.getElementById('monthly-investment').value) || 0;
+            
+            let futureValue, profit;
+            
+            // Monthly investment calculation using Future Value of Annuity formula
+            // FV = PMT × [((1 + r)^n - 1) / r]
+            // Where: PMT = monthly payment, r = monthly interest rate, n = total months
+            const monthlyRate = expectedReturn / 12;
+            const totalMonths = years * 12;
+            
+            if (monthlyRate > 0) {
+                futureValue = monthlyAmount * (Math.pow(1 + monthlyRate, totalMonths) - 1) / monthlyRate;
+            } else {
+                futureValue = monthlyAmount * totalMonths; // If no return
+            }
+            
+            const totalInvested = monthlyAmount * totalMonths;
+            profit = futureValue - totalInvested;
+            
+            // Update initial amount to show monthly investment info
+            document.getElementById('initial-amount').innerHTML = `
+                <div class="text-center">
+                    <div class="text-lg font-bold text-blue-600">${monthlyAmount.toLocaleString()} บาท/เดือน</div>
+                    <div class="text-xs text-gray-500">รวม ${totalInvested.toLocaleString()} บาท</div>
+                </div>
+            `;
+            
+            // Show the section
+            document.getElementById('future-value-section').classList.remove('hidden');
+            
+            // Update values
+            document.getElementById('future-amount').textContent = `${Math.round(futureValue).toLocaleString()} บาท`;
+            document.getElementById('profit-amount').textContent = `${Math.round(profit).toLocaleString()} บาท`;
+            document.getElementById('investment-period').textContent = years;
+            document.getElementById('display-return').textContent = expectedReturnStr;
+            
+            // Animate progress bar
+            setTimeout(() => {
+                const progressPercentage = Math.min((expectedReturn * 100) * 2, 100); // Scale for visual effect
+                document.getElementById('return-progress').style.width = `${progressPercentage}%`;
+            }, 100);
+        }
+        
+        function clearInvestmentTable() {
+            const tableBody = document.getElementById('investment-table-body');
+            tableBody.innerHTML = '<tr><td colspan="3" class="px-3 py-4 text-center text-gray-500 text-sm">กรุณาใส่จำนวนเงินต่อเดือนและระยะเวลา</td></tr>';
+            document.getElementById('total-amount').textContent = '0 บาท/เดือน';
+        }
+        
+        function updateGoalStatus() {
+            const goalAmount = parseFloat(document.getElementById('investment-goal').value) || 0;
+            const monthlyAmount = parseFloat(document.getElementById('monthly-investment').value) || 0;
+            const years = parseFloat(document.getElementById('investment-years').value) || 0;
+            const goalStatusDiv = document.getElementById('goal-status');
+            
+            if (goalAmount <= 0) {
+                goalStatusDiv.classList.add('hidden');
+                return;
+            }
+            
+            goalStatusDiv.classList.remove('hidden');
+            
+            if (monthlyAmount > 0 && years > 0) {
+                // คำนวณมูลค่าอนาคตรวมผลกำไร
+                const result = document.getElementById('test-result').textContent;
+                const performanceData = getPerformanceData(result);
+                const expectedReturn = parseFloat(performanceData.expectedReturn.replace('%', '')) / 100;
+                const monthlyRate = expectedReturn / 12;
+                const totalMonths = years * 12;
+                
+                let futureValue;
+                if (monthlyRate > 0) {
+                    futureValue = monthlyAmount * (Math.pow(1 + monthlyRate, totalMonths) - 1) / monthlyRate;
+                } else {
+                    futureValue = monthlyAmount * totalMonths;
+                }
+                
+                const totalInvested = monthlyAmount * totalMonths;
+                
+                if (futureValue >= goalAmount) {
+                    // เป้าหมายสำเร็จ
+                    const excess = futureValue - goalAmount;
+                    goalStatusDiv.innerHTML = `
+                        <div class="bg-green-50 border border-green-200 rounded-lg p-4">
+                            <div class="flex items-center mb-2">
+                                <div class="w-6 h-6 text-green-600 mr-2">
+                                    <svg fill="currentColor" viewBox="0 0 20 20">
+                                        <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"></path>
+                                    </svg>
+                                </div>
+                                <div class="text-sm font-medium text-green-800">🎯 เป้าหมายสำเร็จแล้ว!</div>
+                            </div>
+                            <div class="text-sm text-green-700">
+                                <div class="mb-1">เป้าหมาย: <span class="font-medium">${goalAmount.toLocaleString()} บาท</span></div>
+                                <div class="mb-1">เงินลงทุน: <span class="font-medium">${totalInvested.toLocaleString()} บาท</span></div>
+                                <div class="mb-1">มูลค่าคาดการณ์: <span class="font-medium text-green-600">${Math.round(futureValue).toLocaleString()} บาท</span></div>
+                                ${excess > 0 ? `<div class="text-green-600 font-medium">เกินเป้าหมาย: ${Math.round(excess).toLocaleString()} บาท</div>` : ''}
+                            </div>
+                            <div class="mt-3">
+                                <div class="bg-green-200 rounded-full h-3 overflow-hidden">
+                                    <div class="bg-green-500 h-full rounded-full transition-all duration-500" style="width: 100%"></div>
+                                </div>
+                                <div class="text-xs text-green-600 mt-1 text-center font-medium">100% สำเร็จ</div>
+                            </div>
+                        </div>
+                    `;
+                } else {
+                    // ยังไม่ถึงเป้าหมาย
+                    const shortage = goalAmount - futureValue;
+                    const percentage = Math.round((futureValue / goalAmount) * 100);
+                    goalStatusDiv.innerHTML = `
+                        <div class="bg-orange-50 border border-orange-200 rounded-lg p-4">
+                            <div class="flex items-center mb-2">
+                                <div class="w-6 h-6 text-orange-600 mr-2">
+                                    <svg fill="currentColor" viewBox="0 0 20 20">
+                                        <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd"></path>
+                                    </svg>
+                                </div>
+                                <div class="text-sm font-medium text-orange-800">ยังไม่ถึงเป้าหมาย</div>
+                            </div>
+                            <div class="text-sm text-orange-700">
+                                <div class="mb-1">เป้าหมาย: <span class="font-medium">${goalAmount.toLocaleString()} บาท</span></div>
+                                <div class="mb-1">เงินลงทุน: <span class="font-medium">${totalInvested.toLocaleString()} บาท</span></div>
+                                <div class="mb-1">มูลค่าคาดการณ์: <span class="font-medium">${Math.round(futureValue).toLocaleString()} บาท</span></div>
+                                <div class="text-orange-600 font-medium">ขาดอีก: ${Math.round(shortage).toLocaleString()} บาท</div>
+                            </div>
+                            <div class="mt-3">
+                                <div class="bg-orange-200 rounded-full h-3 overflow-hidden">
+                                    <div class="bg-orange-500 h-full rounded-full transition-all duration-500" style="width: ${percentage}%"></div>
+                                </div>
+                                <div class="text-xs text-orange-600 mt-1 text-center font-medium">${percentage}% ของเป้าหมาย</div>
+                            </div>
+                        </div>
+                    `;
+                }
+            } else {
+                // ยังไม่ได้ใส่จำนวนเงิน
+                goalStatusDiv.innerHTML = `
+                    <div class="bg-gray-50 border border-gray-200 rounded-lg p-4">
+                        <div class="flex items-center mb-2">
+                            <div class="w-6 h-6 text-gray-600 mr-2">
+                                <svg fill="currentColor" viewBox="0 0 20 20">
+                                    <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd"></path>
+                                </svg>
+                            </div>
+                            <div class="text-sm font-medium text-gray-800">เป้าหมายการลงทุน</div>
+                        </div>
+                        <div class="text-sm text-gray-700">
+                            <div class="mb-1">เป้าหมาย: <span class="font-medium">${goalAmount.toLocaleString()} บาท</span></div>
+                            <div class="text-gray-500">กรุณาใส่จำนวนเงินลงทุนเพื่อดูความคืบหน้า</div>
+                        </div>
+                        <div class="mt-3">
+                            <div class="bg-gray-200 rounded-full h-3 overflow-hidden">
+                                <div class="bg-gray-400 h-full rounded-full transition-all duration-500" style="width: 0%"></div>
+                            </div>
+                            <div class="text-xs text-gray-500 mt-1 text-center">0% ของเป้าหมาย</div>
+                        </div>
+                    </div>
+                `;
+            }
+        }
+        
+        function showTestResult(testData) {
+            const dateTime = formatDateTime(testData.timestamp);
+            
+            document.getElementById('test-result').textContent = testData.result;
+            document.getElementById('test-description').textContent = getResultDescription(testData.investmentStyle, testData.riskTolerance);
+            document.getElementById('result-account').textContent = testData.accountNumber || '-';
+            document.getElementById('result-name').textContent = testData.fullName || '-';
+            document.getElementById('test-date').textContent = dateTime.date;
+            document.getElementById('test-time').textContent = dateTime.time;
+            
+            // แสดงข้อความแนะนำการติดตาม
+            document.getElementById('reminder-text').textContent = getInvestmentReminder(testData.investmentStyle);
+            
+            // อัปเดตป้ายกำกับในแผนภูมิ
+            document.getElementById('chart-result').textContent = testData.result;
+            document.getElementById('chart-detail-result').textContent = testData.result;
+            
+            // สร้างแผนภูมิโดนัทตามผลการทดสอบ
+            const portfolioData = getPortfolioData(testData.result);
+            createDoughnutChart(portfolioData);
+            createDetailDoughnutChart(portfolioData);
+            
+            // อัปเดตข้อมูลประสิทธิภาพ
+            const performanceData = getPerformanceData(testData.result);
+            document.getElementById('expected-return').textContent = performanceData.expectedReturn;
+            document.getElementById('standard-deviation').textContent = performanceData.standardDeviation;
+            
+            // ตั้งค่า event listeners สำหรับ portfolio section
+            setupPortfolioEventListeners();
+            
+            // โหลดข้อมูลการลงทุนที่บันทึกไว้ (ถ้ามี)
+            if (testData.investmentGoal || testData.investmentYears || testData.monthlyInvestment) {
+                document.getElementById('investment-goal').value = testData.investmentGoal || '';
+                document.getElementById('investment-years').value = testData.investmentYears || '';
+                document.getElementById('monthly-investment').value = testData.monthlyInvestment || '';
+                
+                // อัปเดตตารางและสถานะหากข้อมูลครบถ้วน
+                const monthlyAmount = testData.monthlyInvestment || 0;
+                const years = testData.investmentYears || 0;
+                
+                if (monthlyAmount >= 3800 && years >= 1) {
+                    updateInvestmentTable(monthlyAmount);
+                    updateGoalStatus();
+                } else {
+                    clearInvestmentTable();
+                }
+            } else {
+                // เคลียร์ตารางการลงทุน
+                clearInvestmentTable();
+                document.getElementById('investment-goal').value = '';
+                document.getElementById('investment-years').value = '';
+                document.getElementById('monthly-investment').value = '';
+                
+                // ซ่อน goal status และ future value section
+                document.getElementById('goal-status').classList.add('hidden');
+                document.getElementById('future-value-section').classList.add('hidden');
+            }
+            
+            Swal.close();
+            document.getElementById('result-modal').classList.remove('hidden');
+        }
+        
+        function updateSummary() {
+            const totalTests = testResults.length;
+            document.getElementById('total-tests').textContent = `${totalTests} ครั้ง`;
+            
+            if (totalTests > 0) {
+                const latestTest = testResults[testResults.length - 1];
+                document.getElementById('latest-result').textContent = latestTest.result;
+            } else {
+                document.getElementById('latest-result').textContent = '-';
+            }
+        }
+        
+        function updateTestHistory() {
+            const historyContainer = document.getElementById('test-history');
+            
+            if (testResults.length === 0) {
+                historyContainer.innerHTML = '<div class="text-center text-gray-500 py-4">ยังไม่มีการทำแบบทดสอบ</div>';
+                return;
+            }
+            
+            const sortedTests = testResults.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+            
+            historyContainer.innerHTML = sortedTests.map(test => {
+                const dateTime = formatDateTime(test.timestamp);
+                
+                return `
+                    <div class="bg-white border border-gray-200 rounded-lg p-4 hover:bg-gray-50 cursor-pointer" 
+                         onclick="showTestDetails(${test.id})">
+                        <div class="flex justify-between items-start mb-2">
+                            <div class="text-sm font-medium text-gray-800">${dateTime.date}</div>
+                            <div class="text-lg font-bold text-purple-600">${test.result}</div>
+                        </div>
+                        <div class="text-xs text-gray-500 mb-2">${dateTime.time}</div>
+                        ${test.fullName ? `<div class="text-sm font-medium text-gray-700 mb-1">${test.fullName}</div>` : ''}
+                        ${test.accountNumber ? `<div class="text-xs text-gray-500 mb-2">บัญชี: ${test.accountNumber}</div>` : ''}
+                        <div class="text-sm text-gray-600">${getResultDescription(test.investmentStyle, test.riskTolerance)}</div>
+                        <div class="text-xs text-purple-600 mt-2">Style: ${test.investmentStyle}, Risk: ${test.riskTolerance}</div>
+                    </div>
+                `;
+            }).join('');
+        }
+        
+        window.showTestDetails = function(testId) {
+            const test = testResults.find(t => t.id === testId);
+            if (test) {
+                showTestResult(test);
+            }
+        };
+    </script>
+ <script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'9a815e3b407426d9',t:'MTc2NDc0NzEyNS4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+</html>
