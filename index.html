@@ -226,7 +226,7 @@
        </div><!-- Monthly Investment Input -->
        <div class="mb-4"><label for="monthly-investment" class="block text-sm font-medium text-gray-700 mb-2">จำนวนเงินลงทุนต่อเดือน (บาท)</label> <input type="number" id="monthly-investment" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="ขั้นต่ำ 3,800 บาท" min="3800" step="100">
         <div class="text-xs text-gray-500 mt-1">
-         ขั้นต่ำ 3,800 บาท ต่อเดือน
+         ขั้นต่ำ 1,000 บาท ต่อเดือน
         </div>
        </div><!-- Goal Status -->
        <div id="goal-status" class="mb-6 hidden"><!-- Goal status will be dynamically generated -->
@@ -380,7 +380,7 @@
                 const monthlyAmount = parseFloat(document.getElementById('monthly-investment').value) || 0;
                 const years = parseFloat(this.value) || 0;
                 
-                if (monthlyAmount >= 3800 && years >= 1) {
+                if (monthlyAmount >= 1000 && years >= 1) {
                     updateInvestmentTable(monthlyAmount);
                     updateGoalStatus();
                 }
@@ -392,7 +392,7 @@
                 const monthlyAmount = parseFloat(this.value) || 0;
                 const years = parseFloat(document.getElementById('investment-years').value) || 0;
                 
-                if (monthlyAmount >= 3800 && years >= 1) {
+                if (monthlyAmount >= 1000 && years >= 1) {
                     updateInvestmentTable(monthlyAmount);
                     updateGoalStatus();
                 } else {
@@ -632,7 +632,7 @@
             
             document.body.appendChild(script);
             
-            // ตั้งเวลาหมดอายุ 10 วินาที
+            // ตั้งเวลาหมดอายุ 30 วินาที
             setTimeout(() => {
                 if (document.getElementById(callbackName)) {
                     document.body.removeChild(script);
@@ -1330,4 +1330,5 @@
     </script>
  <script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'9a815e3b407426d9',t:'MTc2NDc0NzEyNS4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
 </html>
+
 
