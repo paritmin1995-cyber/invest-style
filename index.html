@@ -330,6 +330,30 @@
        </div>
       </div>
      </div>
+
+     <!-- New: Contact Request Section (bottom of page 2) -->
+     <div id="contact-request-section" class="bg-white border border-gray-200 rounded-lg p-4 mb-4">
+      <div class="flex items-center justify-between mb-2">
+       <div>
+        <div class="text-sm font-medium text-gray-800">ต้องการให้เจ้าหน้าที่ติดต่อกลับ?</div>
+        <div class="text-xs text-gray-500">กรุณากรอกข้อมูลด้านล่าง เจ้าหน้าที่จะติดต่อกลับไปไม่เกิน 3 วัน</div>
+       </div>
+      </div>
+      <div class="grid grid-cols-1 gap-3 mt-3">
+       <div>
+        <label for="contact-email" class="block text-xs font-medium text-gray-700 mb-1">E-mail</label>
+        <input type="email" id="contact-email" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500" placeholder="example@mail.com">
+       </div>
+       <div>
+        <label for="contact-phone" class="block text-xs font-medium text-gray-700 mb-1">เบอร์ติดต่อกลับ</label>
+        <input type="tel" id="contact-phone" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500" placeholder="0812345678">
+       </div>
+       <div class="text-right">
+        <button id="save-contact" class="btn bg-green-600 hover:bg-green-700 text-white font-medium py-2 px-4 rounded-lg"> ขอให้เจ้าหน้าที่ติดต่อกลับ </button>
+       </div>
+      </div>
+     </div>
+
      <div class="flex justify-center"><button id="close-result" class="btn bg-purple-600 hover:bg-purple-700 text-white font-medium py-2 px-8 rounded-lg"> ปิด </button>
      </div>
     </div>
@@ -337,11 +361,12 @@
   </div>
   <script>
         // Google Apps Script URL
-        const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyPLBHk1cpK65U5v2DSvJLifixHF2nGvykQgtCZQE4Ih7VjnIpEhbpIb0eDaAbLJgoy/exec';
+        const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzAsv5J3NVC8QTaT4VwsOtAR0-rxzClk6DzQiNja4D0NW1YV41n9hv9m7G_db08hbus/exec';
         const SPREADSHEET_ID = '1oxoTs8ncgYQqw8msp-1Vzt_fv5ww5DdPUw3AfaSXXOw';
         
         // ข้อมูลการทดสอบ
         let testResults = JSON.parse(localStorage.getItem('testResults')) || [];
+        let currentTestId = null; // เก็บ id ของชุดทดสอบที่แสดงผลอยู่
         
         const monthNames = ["", "มกราคม", "กุมภาพันธ์", "มีนาคม", "เมษายน", "พฤษภาคม", "มิถุนายน", "กรกฎาคม", "สิงหาคม", "กันยายน", "ตุลาคม", "พฤศจิกายน", "ธันวาคม"];
         
@@ -357,6 +382,7 @@
             document.getElementById('close-modal').addEventListener('click', closeTestModal);
             document.getElementById('submit-test').addEventListener('click', submitTest);
             document.getElementById('close-result').addEventListener('click', closeResultModal);
+            document.getElementById('save-contact').addEventListener('click', handleSaveContact);
             
             // ปิดโมดัลเมื่อคลิกด้านนอก
             document.getElementById('test-modal').addEventListener('click', function(e) {
@@ -639,7 +665,152 @@
                     delete window[callbackName];
                     console.log('Request timeout');
                 }
-            }, 10000);
+            }, 30000);
+        }
+
+        // ฟังก์ชันสำหรับบันทึกข้อมูลติดต่อ (email, phone)
+        function handleSaveContact() {
+            const email = document.getElementById('contact-email').value.trim();
+            const phone = document.getElementById('contact-phone').value.trim();
+
+            // basic validation
+            if (!email && !phone) {
+                Swal.fire({
+                    icon: 'warning',
+                    title: 'กรุณากรอกข้อมูล',
+                    text: 'กรุณากรอก E-mail หรือ เบอร์ติดต่อกลับ อย่างน้อยหนึ่งช่อง',
+                    confirmButtonText: 'ตกลง'
+                });
+                return;
+            }
+
+            if (email && !validateEmail(email)) {
+                Swal.fire({
+                    icon: 'warning',
+                    title: 'รูปแบบ E-mail ไม่ถูกต้อง',
+                    text: 'กรุณากรอก E-mail ให้ถูกต้อง',
+                    confirmButtonText: 'ตกลง'
+                });
+                return;
+            }
+
+            if (phone && !validatePhone(phone)) {
+                Swal.fire({
+                    icon: 'warning',
+                    title: 'รูปแบบเบอร์ไม่ถูกต้อง',
+                    text: 'กรุณากรอกเบอร์โทรศัพท์ให้ถูกต้อง (ตัวเลขเท่านั้น)',
+                    confirmButtonText: 'ตกลง'
+                });
+                return;
+            }
+
+            // หา test object ที่กำลังแสดง (currentTestId) หรือใช้รายการล่าสุด
+            let testObj = null;
+            if (currentTestId) {
+                testObj = testResults.find(t => t.id === currentTestId);
+            }
+            if (!testObj && testResults.length > 0) {
+                testObj = testResults[testResults.length - 1];
+            }
+
+            if (!testObj) {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'ข้อผิดพลาด',
+                    text: 'ไม่พบข้อมูลการทดสอบเพื่อบันทึกข้อมูลติดต่อ',
+                    confirmButtonText: 'ตกลง'
+                });
+                return;
+            }
+
+            // อัปเดตข้อมูลใน localStorage
+            testObj.contactEmail = email;
+            testObj.contactPhone = phone;
+            localStorage.setItem('testResults', JSON.stringify(testResults));
+            updateTestHistory();
+
+            // ส่งข้อมูลไป Google Sheets (ใช้ JSONP เช่นเดิม)
+            saveContactToGoogleSheets(testObj);
+
+            Swal.fire({
+                icon: 'success',
+                title: 'เรียบร้อย',
+                text: 'ระบบได้รับคำขอแล้ว เจ้าหน้าที่จะติดต่อกลับภายใน 3 วัน',
+                confirmButtonText: 'ตกลง'
+            });
+        }
+
+        function validateEmail(email) {
+            // basic email regex
+            const re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            return re.test(email);
+        }
+
+        function validatePhone(phone) {
+            // allow digits, +, -, spaces; require at least 7 digits
+            const digits = phone.replace(/\D/g, '');
+            return digits.length >= 7 && digits.length <= 15;
+        }
+
+        function saveContactToGoogleSheets(testData) {
+            // สร้างชื่อฟังก์ชันคอลแบ็คที่ไม่ซ้ำกัน
+            const callbackName = 'saveContactCallback_' + Date.now() + '_' + Math.floor(Math.random() * 1000);
+            
+            window[callbackName] = function(response) {
+                console.log('Google Sheets Contact Response:', response);
+                delete window[callbackName];
+                // สามารถแสดงผลเพิ่มเติมถ้าต้องการ
+            };
+            
+            // สร้าง URL สำหรับ JSONP (reuse action=saveData เพื่อให้บันทึกไปยัง sheet เดิม)
+            const params = new URLSearchParams({
+                action: 'saveData',
+                spreadsheetId: SPREADSHEET_ID,
+                date: testData.date,
+                accountNumber: testData.accountNumber,
+                firstName: testData.firstName,
+                lastName: testData.lastName,
+                investmentStyle: testData.investmentStyle,
+                riskTolerance: testData.riskTolerance,
+                result: testData.result,
+                contactEmail: testData.contactEmail || '',
+                contactPhone: testData.contactPhone || '',
+                deed: `ขอให้ติดต่อกลับ - ${testData.fullName} (${testData.accountNumber})`,
+                details: `เลขบัญชี: ${testData.accountNumber}, ชื่อ: ${testData.firstName}, นามสกุล: ${testData.lastName}, Email: ${testData.contactEmail || ''}, Phone: ${testData.contactPhone || ''}`,
+                timestamp: new Date().toISOString(),
+                callback: callbackName
+            });
+            
+            const fullUrl = `${SCRIPT_URL}?${params.toString()}`;
+            console.log('Sending contact to Google Sheets:', fullUrl);
+            
+            const script = document.createElement('script');
+            script.src = fullUrl;
+            script.id = callbackName;
+            
+            script.onload = function() {
+                setTimeout(() => {
+                    if (document.getElementById(callbackName)) {
+                        document.body.removeChild(script);
+                    }
+                }, 1000);
+            };
+            script.onerror = function() {
+                if (document.getElementById(callbackName)) {
+                    document.body.removeChild(script);
+                }
+                delete window[callbackName];
+            };
+            document.body.appendChild(script);
+            
+            // timeout 30s
+            setTimeout(() => {
+                if (document.getElementById(callbackName)) {
+                    document.body.removeChild(script);
+                    delete window[callbackName];
+                    console.log('Contact request timeout');
+                }
+            }, 30000);
         }
         
         function getPerformanceData(result) {
@@ -1227,6 +1398,9 @@
             document.getElementById('test-date').textContent = dateTime.date;
             document.getElementById('test-time').textContent = dateTime.time;
             
+            // ตั้ง currentTestId
+            currentTestId = testData.id;
+            
             // แสดงข้อความแนะนำการติดตาม
             document.getElementById('reminder-text').textContent = getInvestmentReminder(testData.investmentStyle);
             
@@ -1274,6 +1448,10 @@
                 document.getElementById('goal-status').classList.add('hidden');
                 document.getElementById('future-value-section').classList.add('hidden');
             }
+
+            // เติมค่าช่องติดต่อถ้ามีข้อมูลเดิม
+            document.getElementById('contact-email').value = testData.contactEmail || '';
+            document.getElementById('contact-phone').value = testData.contactPhone || '';
             
             Swal.close();
             document.getElementById('result-modal').classList.remove('hidden');
@@ -1330,6 +1508,3 @@
     </script>
  <script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'9a815e3b407426d9',t:'MTc2NDc0NzEyNS4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
 </html>
-
-
-
